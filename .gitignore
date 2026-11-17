@@ -1,0 +1,9 @@
+# Runtime data and benchmark output
+/data/*.db
+/data/*.db-*
+/results/*
+!/results/.gitkeep
+
+# Dependencies and builds
+/apps/server-node/node_modules/
+/apps/server-rust/target/
