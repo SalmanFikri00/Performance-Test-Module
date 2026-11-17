@@ -17,7 +17,7 @@ Kedua server menggunakan `0.0.0.0:3000`, database `data/bench.db`, serta pragma 
 
 **Di Orange Pi Zero 3:** Debian/Armbian 64-bit, koneksi LAN yang sama dengan laptop, Node.js 22+, Rust stable, serta compiler dan utilitas monitoring. Disarankan memakai catu daya dan pendinginan yang stabil.
 
-**Di laptop:** k6, `curl`, dan salinan repo. Gunakan koneksi LAN/Wi-Fi yang stabil dan jangan menjalankan beban lain selama benchmark.
+**Di laptop:** Node.js 20+ dan npm (untuk runner Windows), k6, `curl`, dan salinan repo. Gunakan koneksi LAN/Wi-Fi yang stabil dan jangan menjalankan beban lain selama benchmark.
 
 ## 1. Siapkan Orange Pi
 
@@ -93,13 +93,34 @@ Respons normal berisi `status: "ok"` dan `runtime: "node"` atau `"rust"`.
 
 Pilih instruksi sesuai sistem operasi.
 
-macOS dengan Homebrew:
+### Windows PowerShell
+
+Instal k6 dengan Windows Package Manager:
+
+```powershell
+winget install k6 --source winget
+```
+
+Tutup dan buka kembali PowerShell setelah instalasi, lalu pastikan perintah berikut berhasil:
+
+```powershell
+k6 version
+node --version
+npm --version
+Invoke-RestMethod http://192.168.1.50:3000/api/ping
+```
+
+Ganti alamat pada pemeriksaan ping dengan IP Orange Pi. Perintah pengujian pada bagian berikut menjalankan k6 **di laptop Windows**; Orange Pi hanya menjalankan server.
+
+### macOS
+
+Pasang melalui Homebrew:
 
 ```bash
 brew install k6
 ```
 
-Ubuntu atau WSL2 Ubuntu:
+### Ubuntu atau WSL2 Ubuntu
 
 ```bash
 sudo apt-get update
@@ -118,9 +139,25 @@ k6 version
 curl --fail http://192.168.1.50:3000/api/ping
 ```
 
-Windows dapat menjalankan langkah ini dari WSL2 Ubuntu. Pastikan WSL2 dapat mengakses IP Orange Pi melalui jaringan lokal.
-
 ## 5. Jalankan dua ronde dari laptop
+
+### Windows PowerShell: atur `.env` sekali, jalankan ronde dengan npm
+
+Buka PowerShell di root folder repo. Pertama kali saja, salin template konfigurasi; lalu ubah `BASE_URL` di `.env` menjadi alamat Orange Pi. Nilai beban default di template adalah warm-up 300 VU selama 15 detik dan puncak 1.000 VU selama 15 detik.
+
+```powershell
+cd .\testing
+if (-not (Test-Path .env)) { Copy-Item .env.example .env }
+notepad .env
+npm install
+npm test
+npm run round1
+npm run round2
+```
+
+Di `.env`, atur alamat dalam bentuk URL lengkap, misalnya `BASE_URL=http://192.168.1.50:3000`. Ubah `WARMUP_VUS`, `WARMUP_DURATION`, `PEAK_VUS`, atau `PEAK_DURATION` di file yang sama bila perlu. Setelah setup awal, cukup jalankan `npm run round1` atau `npm run round2` dari folder `testing`; tidak perlu mengetik nilai env di setiap perintah. Hasil tersimpan di `results/` pada root repo.
+
+### Linux/macOS: runner shell yang sudah tersedia
 
 Dari root repo di laptop, gunakan alamat IP atau hostname **tanpa** `http://` dan tanpa path:
 
@@ -132,7 +169,7 @@ Dari root repo di laptop, gunakan alamat IP atau hostname **tanpa** `http://` da
 ./scripts/bench.sh 192.168.1.50 round2
 ```
 
-Setiap perintah menjalankan dua tahap: `warmup` pada 300 VU, kemudian `peak` pada 1.000 VU. Durasi setiap tahap default 15 detik. Untuk mengubah concurrency puncak dan durasi kedua tahap, berikan argumen ketiga dan keempat:
+Kedua runner menjalankan dua tahap: `warmup` pada 300 VU, kemudian `peak` pada 1.000 VU. Durasi setiap tahap default 15 detik. Di Windows, ubah parameter melalui `testing/.env`. Di Linux/macOS, concurrency puncak dan durasi dapat diubah dengan argumen ketiga dan keempat:
 
 ```bash
 ./scripts/bench.sh 192.168.1.50 round1 500 10s

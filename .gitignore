@@ -7,3 +7,5 @@
 # Dependencies and builds
 /apps/server-node/node_modules/
 /apps/server-rust/target/
+/testing/node_modules/
+/testing/.env

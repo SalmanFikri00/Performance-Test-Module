@@ -1,0 +1,17 @@
+{
+  "name": "opi-stress-bench-testing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "round1": "node run.js round1",
+    "round2": "node run.js round2",
+    "test": "node --check run.js"
+  },
+  "dependencies": {
+    "dotenv": "^16.6.1"
+  }
+}
